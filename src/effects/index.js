@@ -8,5 +8,6 @@ export GlowEffect from './GlowEffect';
 export KaleidoscopeEffect from './KaleidoscopeEffect';
 export LEDEffect from './LEDEffect';
 export MirrorEffect from './MirrorEffect';
+export OutlineEffect from './OutlineEffect';
 export PixelateEffect from './PixelateEffect';
 export RGBShiftEffect from './RGBShiftEffect';

@@ -34,4 +34,6 @@ export default class Effect extends Display {
   }
 
   render() {}
+
+  setSelectedObjects() {}
 }
