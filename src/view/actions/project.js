@@ -10,6 +10,7 @@ import Stage from 'core/Stage';
 import Scene from 'core/Scene';
 import Display from 'core/Display';
 import AudioReactor from 'audio/AudioReactor';
+import FeatureReactor from 'audio/FeatureReactor';
 import {
   DEFAULT_CANVAS_BGCOLOR,
   DEFAULT_CANVAS_HEIGHT,
@@ -67,8 +68,13 @@ export function loadProject(data) {
   }
 
   if (data.reactors) {
+    const reactorMap = {
+      AudioReactor,
+      FeatureReactor,
+    };
+
     data.reactors.forEach(config => {
-      const reactor = Entity.create(AudioReactor, config);
+      const reactor = Entity.create(reactorMap[config.name] || AudioReactor, config);
 
       reactors.addReactor(reactor);
     });
