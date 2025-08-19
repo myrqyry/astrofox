@@ -29,8 +29,24 @@ export default class Player extends EventEmitter {
     const { audio } = this;
 
     if (audio) {
-      this.stop();
-      audio.unload();
+      // Stop playback and ensure timers are cleared
+      try {
+        this.stop();
+      } catch (e) {
+        // ignore
+      }
+
+      // Let the Audio instance cleanup its own nodes/buffer
+      try {
+        if (typeof audio.unload === 'function') {
+          audio.unload();
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // Remove reference to audio so it can be garbage collected
+      this.audio = null;
 
       this.emit('audio-unload');
     }
@@ -153,5 +169,41 @@ export default class Player extends EventEmitter {
 
   isLooping() {
     return !!this.loop;
+  }
+
+  /**
+   * Dispose player resources: stop playback, clear timers, disconnect volume node and
+   * release references. Does NOT close the shared AudioContext.
+   */
+  dispose() {
+    try {
+      this.stop();
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      clearInterval(this.timer);
+    } catch (e) {
+      // ignore
+    }
+
+    try {
+      if (this.volume) {
+        try {
+          this.volume.disconnect();
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (e) {
+      // ignore
+    } finally {
+      this.volume = null;
+    }
+
+    // Clear audio reference
+    this.audio = null;
+    this.nodes = [];
   }
 }

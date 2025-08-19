@@ -1,13 +1,11 @@
-import create from 'zustand';
+import { createSlice } from './rootStore';
 import { uniqueId } from 'utils/crypto';
 
 const initialState = {
   modals: [],
 };
 
-const modalStore = create(() => ({
-  ...initialState,
-}));
+const modalStore = createSlice('modals');
 
 export function showModal(component, modalProps, componentProps) {
   modalStore.setState(({ modals }) => ({

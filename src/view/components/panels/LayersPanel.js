@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import SceneLayer from 'components/panels/SceneLayer';
 import Layout from 'components/layout/Layout';
 import ButtonPanel from 'components/layout/ButtonPanel';
@@ -16,7 +16,7 @@ import { Picture, Cube, LightUp, ChevronUp, ChevronDown, TrashEmpty } from 'view
 import { reverse } from 'utils/array';
 import styles from './LayersPanel.less';
 
-export default function LayersPanel() {
+function LayersPanel() {
   const scenes = useScenes(state => state.scenes);
   const activeElementId = useApp(state => state.activeElementId);
   const hasScenes = scenes.length > 0;
@@ -39,77 +39,61 @@ export default function LayersPanel() {
     }, undefined);
   }, [scenes, activeElementId]);
 
-  function handleAddControl(Entity) {
-    const entity = new Entity();
+  const handleAddControl = useCallback(
+    Entity => {
+      const entity = new Entity();
+      setActiveElementId(entity?.id);
+      // addElement is imported and assumed stable
+      addElement(entity, activeScene?.id);
+    },
+    [activeScene],
+  );
 
-    setActiveElementId(entity?.id);
+  const handleLayerClick = useCallback(id => setActiveElementId(id), []);
 
-    addElement(entity, activeScene?.id);
-  }
+  const handleLayerUpdate = useCallback((id, prop, value) => updateElement(id, prop, value), []);
 
-  function handleLayerClick(id) {
-    setActiveElementId(id);
-  }
-
-  function handleLayerUpdate(id, prop, value) {
-    updateElement(id, prop, value);
-  }
-
-  async function handleAddScene() {
+  const handleAddScene = useCallback(async () => {
     const scene = await addScene();
-
     setActiveElementId(scene?.id);
-  }
+  }, []);
 
-  function handleAddDisplay() {
-    showModal(
-      'ControlPicker',
-      { title: 'Controls' },
-      { type: 'displays', onSelect: handleAddControl },
-    );
-  }
+  const handleAddDisplay = useCallback(() => {
+    showModal('ControlPicker', { title: 'Controls' }, { type: 'displays', onSelect: handleAddControl });
+  }, [handleAddControl]);
 
-  function handleAddEffect() {
-    showModal(
-      'ControlPicker',
-      { title: 'Controls' },
-      { type: 'effects', onSelect: handleAddControl },
-    );
-  }
+  const handleAddEffect = useCallback(() => {
+    showModal('ControlPicker', { title: 'Controls' }, { type: 'effects', onSelect: handleAddControl });
+  }, [handleAddControl]);
 
-  function handleMoveUp() {
-    moveElement(activeElementId, 1);
-  }
-  function handleMoveDown() {
-    moveElement(activeElementId, -1);
-  }
+  const handleMoveUp = useCallback(() => moveElement(activeElementId, 1), [activeElementId]);
+  const handleMoveDown = useCallback(() => moveElement(activeElementId, -1), [activeElementId]);
 
-  function handleRemove() {
-    if (activeElementId) {
-      if (activeElementId === activeScene?.id) {
-        const newScene = sortedScenes.find(e => e !== activeScene);
+  const handleRemove = useCallback(() => {
+    if (!activeElementId) return;
 
-        setActiveElementId(newScene?.id);
-      } else {
-        const scene = sortedScenes.find(e => e === activeScene);
+    if (activeElementId === activeScene?.id) {
+      const newScene = sortedScenes.find(e => e !== activeScene);
+      setActiveElementId(newScene?.id);
+    } else {
+      const scene = sortedScenes.find(e => e === activeScene);
 
-        if (scene) {
-          const { displays, effects } = scene;
-          const element =
-            reverse(displays).find(e => e !== activeElementId) ||
-            reverse(effects).find(e => e !== activeElementId);
+      if (scene) {
+        const { displays, effects } = scene;
+        const element =
+          reverse(displays).find(e => e !== activeElementId) ||
+          reverse(effects).find(e => e !== activeElementId);
 
-          if (element) {
-            setActiveElementId(element?.id);
-          } else {
-            setActiveElementId(activeScene?.id);
-          }
+        if (element) {
+          setActiveElementId(element?.id);
+        } else {
+          setActiveElementId(activeScene?.id);
         }
       }
-
-      removeElement(activeElementId);
     }
-  }
+
+    removeElement(activeElementId);
+  }, [activeElementId, activeScene, sortedScenes]);
 
   return (
     <Layout className={styles.panel}>
@@ -160,3 +144,6 @@ export default function LayersPanel() {
     </Layout>
   );
 }
+
+// Memoize the component to avoid rerenders when parent updates but internal selectors/hooks didn't change
+export default React.memo(LayersPanel);

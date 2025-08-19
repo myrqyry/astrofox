@@ -1,7 +1,7 @@
 import CanvasDisplay from 'core/CanvasDisplay';
 import CanvasBars from 'canvas/CanvasBars';
 import FFTParser from 'audio/FFTParser';
-import { FFT_SIZE, SAMPLE_RATE } from 'view/constants';
+import { FFT_SIZE, SAMPLE_RATE, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from 'view/constants';
 import { property, stageWidth, stageHeight } from 'utils/controls';
 
 export default class BarSpectrumDisplay extends CanvasDisplay {
@@ -11,15 +11,15 @@ export default class BarSpectrumDisplay extends CanvasDisplay {
     type: 'display',
     label: 'Bar Spectrum',
     defaultProperties: {
-      width: 770,
-      height: 240,
+      width: DEFAULT_CANVAS_WIDTH,
+      height: DEFAULT_CANVAS_HEIGHT / 2,
       x: 0,
       y: 0,
       barWidth: -1,
       barSpacing: -1,
       barWidthAutoSize: 1,
       barSpacingAutoSize: 1,
-      shadowHeight: 100,
+      shadowHeight: DEFAULT_CANVAS_HEIGHT / 6,
       color: ['#FFFFFF', '#FFFFFF'],
       shadowColor: ['#333333', '#000000'],
       rotation: 0,

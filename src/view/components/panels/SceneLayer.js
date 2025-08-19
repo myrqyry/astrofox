@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import classNames from 'classnames';
 import Layer from 'components/panels/Layer';
 import { Picture, Cube, LightUp, DocumentLandscape } from 'view/icons';
@@ -11,24 +11,28 @@ const icons = {
   webgl: Cube,
 };
 
-export default function SceneLayer({ scene, activeElementId, onLayerClick, onLayerUpdate }) {
+function SceneLayer({ scene, activeElementId, onLayerClick, onLayerUpdate }) {
   const { id, displayName, enabled } = scene;
 
   const displays = useMemo(() => reverse(scene.displays), [scene.displays]);
   const effects = useMemo(() => reverse(scene.effects), [scene.effects]);
 
-  const renderLayer = ({ id, type, displayName, enabled }) => (
-    <Layer
-      key={id}
-      id={id}
-      name={displayName}
-      icon={icons[type]}
-      className={styles.child}
-      enabled={enabled}
-      active={id === activeElementId}
-      onLayerClick={onLayerClick}
-      onLayerUpdate={onLayerUpdate}
-    />
+  // Stable render function so child Layer receives stable props where possible
+  const renderLayer = useCallback(
+    ({ id: childId, type, displayName: childName, enabled: childEnabled }) => (
+      <Layer
+        key={childId}
+        id={childId}
+        name={childName}
+        icon={icons[type]}
+        className={styles.child}
+        enabled={childEnabled}
+        active={childId === activeElementId}
+        onLayerClick={onLayerClick}
+        onLayerUpdate={onLayerUpdate}
+      />
+    ),
+    [activeElementId, onLayerClick, onLayerUpdate],
   );
 
   return (
@@ -50,3 +54,5 @@ export default function SceneLayer({ scene, activeElementId, onLayerClick, onLay
     </div>
   );
 }
+
+export default React.memo(SceneLayer);

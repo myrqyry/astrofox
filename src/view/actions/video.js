@@ -1,4 +1,5 @@
 import create from 'zustand';
+import { createSlice } from './rootStore';
 import { videoRenderer, player } from 'global';
 
 const initialState = {
@@ -11,7 +12,7 @@ const initialState = {
   startTime: 0,
 };
 
-const videoStore = create(() => ({ ...initialState }));
+const videoStore = createSlice('video');
 
 export function startRender(props) {
   player.stop();

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import classNames from 'classnames';
 import Splitter from 'components/layout/Splitter';
 import styles from './Panel.less';
+import ErrorBoundary from 'components/common/ErrorBoundary';
 
 export default function Panel({
   title,
@@ -42,7 +43,7 @@ export default function Panel({
           <div className={styles.title}>{title}</div>{' '}
         </div>
       )}
-      {children}
+      <ErrorBoundary name={`Panel:${title || 'untitled'}`}>{children}</ErrorBoundary>
       {resizable && (
         <Splitter
           type="horizontal"

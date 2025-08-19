@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { createSlice } from './rootStore';
 import semver from 'semver';
 import { api, env, logger } from 'global';
 import configStore from './config';
@@ -13,9 +13,7 @@ const initialState = {
   updateInfo: null,
 };
 
-const updateStore = create(() => ({
-  ...initialState,
-}));
+const updateStore = createSlice('updates');
 
 export function updateDownloadProgress(info) {
   updateStore.setState({ downloadProgress: info.percent });

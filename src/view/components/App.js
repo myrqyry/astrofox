@@ -9,6 +9,7 @@ import ControlDock from 'components/panels/ControlDock';
 import ReactorPanel from 'components/panels/ReactorPanel';
 import Player from 'components/player/Player';
 import Stage from 'components/stage/Stage';
+import ErrorBoundary from 'components/common/ErrorBoundary';
 import { initApp } from 'actions/app';
 
 function App() {
@@ -21,20 +22,33 @@ function App() {
   }, []);
 
   return (
-    <Layout direction="column" onDrop={ignoreEvents} onDragOver={ignoreEvents} full>
-      <Preload />
-      <TitleBar />
-      <Layout direction="row">
-        <Layout id="viewport" direction="column">
-          <Stage />
-          <Player />
-          <ReactorPanel />
+    <ErrorBoundary>
+      <Layout direction="column" onDrop={ignoreEvents} onDragOver={ignoreEvents} full>
+        <Preload />
+        <TitleBar />
+        <Layout direction="row">
+          <Layout id="viewport" direction="column">
+            <ErrorBoundary>
+              <Stage />
+            </ErrorBoundary>
+
+            <ErrorBoundary>
+              <Player />
+            </ErrorBoundary>
+
+            <ErrorBoundary>
+              <ReactorPanel />
+            </ErrorBoundary>
+          </Layout>
+
+          <ErrorBoundary>
+            <ControlDock />
+          </ErrorBoundary>
         </Layout>
-        <ControlDock />
+        <StatusBar />
+        <Modals />
       </Layout>
-      <StatusBar />
-      <Modals />
-    </Layout>
+    </ErrorBoundary>
   );
 }
 

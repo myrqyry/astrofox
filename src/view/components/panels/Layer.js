@@ -5,7 +5,7 @@ import Icon from 'components/interface/Icon';
 import { Eye } from 'view/icons';
 import styles from './Layer.less';
 
-export default function Layer({
+function Layer({
   id,
   name = '',
   icon = null,
@@ -75,3 +75,6 @@ export default function Layer({
     </div>
   );
 }
+
+// Memoize the component to avoid re-rendering when props are shallow-equal
+export default React.memo(Layer);

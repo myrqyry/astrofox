@@ -1,7 +1,7 @@
 import Entity from 'core/Entity';
 import fft from 'fourier-transform';
 import blackman from 'window-function/blackman';
-import { FFT_SIZE } from 'view/constants';
+import { FFT_SIZE, ANALYZER_DEFAULTS } from 'view/constants';
 import { mag2db, normalize } from 'utils/math';
 import { downmix } from 'utils/audio';
 import { updateExistingProps } from '../utils/object';
@@ -9,9 +9,9 @@ import { updateExistingProps } from '../utils/object';
 export default class SpectrumAnalyzer extends Entity {
   static defaultProperties = {
     fftSize: FFT_SIZE,
-    minDecibels: -100,
-    maxDecibels: 0,
-    smoothingTimeConstant: 0,
+    minDecibels: ANALYZER_DEFAULTS.MIN_DECIBELS,
+    maxDecibels: ANALYZER_DEFAULTS.MAX_DECIBELS,
+    smoothingTimeConstant: ANALYZER_DEFAULTS.SMOOTHING_TIME_CONSTANT,
   };
 
   constructor(context, properties) {
@@ -43,6 +43,16 @@ export default class SpectrumAnalyzer extends Entity {
   init() {
     const { audioContext, analyzer: { fftSize } } = this;
 
+    // If re-init called, release previous large arrays/buffer so GC can reclaim memory
+    try {
+      if (this.buffer) {
+        // Breaking references to allow GC
+        this.buffer = null;
+      }
+    } catch (e) {
+      // ignore
+    }
+
     this.fft = new Uint8Array(fftSize / 2);
     this.td = new Float32Array(fftSize);
 
@@ -63,6 +73,12 @@ export default class SpectrumAnalyzer extends Entity {
   }
 
   getFloatTimeDomainData(array) {
+    if (!this.buffer) {
+      // If buffer has been released, fill with zeros to avoid errors
+      array.fill(0);
+      return;
+    }
+
     array.set(this.buffer.getChannelData(0));
   }
 
@@ -147,5 +163,44 @@ export default class SpectrumAnalyzer extends Entity {
     this.fft.fill(0);
     this.td.fill(0);
     this.smoothing.fill(0);
+  }
+
+  /**
+   * Dispose of internal buffers and disconnect any Web Audio nodes created by this analyzer.
+   * Does NOT close the provided AudioContext (caller owns that).
+   */
+  dispose() {
+    try {
+      if (this.analyzer && typeof this.analyzer.disconnect === 'function') {
+        try {
+          this.analyzer.disconnect();
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Clear references to large arrays/buffers so garbage collector can reclaim memory
+    try {
+      if (this.fft) {
+        this.fft = null;
+      }
+      if (this.td) {
+        this.td = null;
+      }
+      if (this.smoothing) {
+        this.smoothing = null;
+      }
+      if (this.blackmanTable) {
+        this.blackmanTable = null;
+      }
+      if (this.buffer) {
+        this.buffer = null;
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 }

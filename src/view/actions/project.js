@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { createSlice } from './rootStore';
 import { api, env, logger, reactors, stage, library } from 'global';
 import { updateCanvas, updateStage } from 'actions/stage';
 import { loadScenes, resetScenes } from 'actions/scenes';
@@ -24,9 +24,7 @@ const initialState = {
   lastModified: 0,
 };
 
-const projectStore = create(() => ({
-  ...initialState,
-}));
+const projectStore = createSlice('project');
 
 export function touchProject() {
   projectStore.setState({ lastModified: Date.now() });

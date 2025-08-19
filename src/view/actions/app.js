@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { createSlice } from './rootStore';
 import Plugin from 'core/Plugin';
 import { api, logger, renderer, stage, library } from 'view/global';
 import configStore, { loadConfig } from 'actions/config';
@@ -10,7 +10,7 @@ import projectStore, {
   saveProjectFile,
 } from 'actions/project';
 import { showModal } from 'actions/modals';
-import { raiseError } from 'actions/error';
+import { raiseError, withErrorHandler, wrapAsync } from 'actions/error';
 import { openAudioFile } from 'actions/audio';
 import { setZoom, zoomIn, zoomOut, fitToScreen } from 'actions/stage';
 import * as displays from 'displays';
@@ -27,9 +27,7 @@ const initialState = {
   activeElementId: null,
 };
 
-const appStore = create(() => ({
-  ...initialState,
-}));
+const appStore = createSlice('app');
 
 export function toggleState(key) {
   appStore.setState(state => ({ [key]: !state[key] }));
@@ -56,7 +54,8 @@ export async function saveImage() {
 
       const buffer = stage.getImage(/jpe?g$/.test(filePath) ? 'image/jpeg' : 'image/png');
 
-      await api.saveImageFile(filePath, buffer);
+      // Use wrapAsync to ensure any rejection is surfaced through raiseError
+      await wrapAsync(api.saveImageFile(filePath, buffer), 'Failed to save image file');
 
       logger.log('Image saved:', filePath);
     } catch (error) {
@@ -210,7 +209,7 @@ export async function loadLibrary() {
   logger.log('Loaded library', library);
 }
 
-export async function initApp() {
+export const initApp = withErrorHandler(async function initAppImpl() {
   await loadConfig();
   await loadPlugins();
   await loadLibrary();
@@ -235,6 +234,6 @@ export async function initApp() {
   api.on('menu-action', handleMenuAction);
 
   renderer.start();
-}
+}, 'Failed to initialize application');
 
 export default appStore;

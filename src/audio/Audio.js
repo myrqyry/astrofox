@@ -24,10 +24,31 @@ export default class Audio {
   }
 
   unload() {
-    if (this.source) {
-      this.stop();
-      this.source = null;
+    // Stop playback and remove audio resources.
+    try {
+      // Stop and disconnect source if present
+      if (this.source) {
+        try {
+          if (this.playing) this.source.stop();
+        } catch (e) {
+          // Some implementations throw if source already stopped - ignore
+        }
+        try {
+          this.source.disconnect();
+        } catch (e) {
+          // ignore
+        }
+        this.source = null;
+      }
+
+      // Disconnect/cleanup any attached nodes (gain, analysers, etc.)
+      this.disconnectNodes();
+      this.nodes = [];
+
+      // Release buffer reference so it can be GC'd
       this.buffer = null;
+    } catch (err) {
+      // Best-effort cleanup; don't throw during unload
     }
   }
 
@@ -104,15 +125,51 @@ export default class Audio {
   }
 
   stop() {
-    if (this.source) {
-      if (this.playing) this.source.stop();
-      this.source.disconnect();
-      this.source = null;
+    // Stop playback and safely disconnect source
+    try {
+      if (this.source) {
+        try {
+          if (this.playing) this.source.stop();
+        } catch (e) {
+          // ignore stop errors
+        }
+        try {
+          this.source.disconnect();
+        } catch (e) {
+          // ignore disconnect errors
+        }
+        this.source = null;
+      }
+    } catch (err) {
+      // ignore
+    } finally {
+      this.stopTime = 0;
+      this.playing = false;
+      this.paused = false;
+    }
+  }
+
+  /**
+   * Fully dispose of this Audio instance: stop playback, disconnect nodes,
+   * release buffers and clear node references. Does NOT close the shared AudioContext.
+   */
+  dispose() {
+    try {
+      this.stop();
+    } catch (e) {
+      // ignore
     }
 
-    this.stopTime = 0;
-    this.playing = false;
-    this.paused = false;
+    try {
+      this.disconnectNodes();
+    } catch (e) {
+      // ignore
+    }
+
+    // Clear nodes array and buffer reference to allow GC
+    this.nodes = [];
+    this.buffer = null;
+    this.source = null;
   }
 
   seek(pos) {

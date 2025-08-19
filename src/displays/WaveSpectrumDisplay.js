@@ -1,7 +1,7 @@
 import CanvasDisplay from 'core/CanvasDisplay';
 import CanvasWave from 'canvas/CanvasWave';
 import FFTParser from 'audio/FFTParser';
-import { FFT_SIZE, SAMPLE_RATE } from 'view/constants';
+import { FFT_SIZE, SAMPLE_RATE, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from 'view/constants';
 import { property, stageHeight, stageWidth } from 'utils/controls';
 
 export default class WaveSpectrumDisplay extends CanvasDisplay {
@@ -11,9 +11,9 @@ export default class WaveSpectrumDisplay extends CanvasDisplay {
     type: 'display',
     label: 'Wave Spectrum',
     defaultProperties: {
-      width: 770,
-      height: 240,
-      midpoint: 240,
+      width: DEFAULT_CANVAS_WIDTH,
+      height: DEFAULT_CANVAS_HEIGHT / 2,
+      midpoint: DEFAULT_CANVAS_HEIGHT,
       x: 0,
       y: 0,
       stroke: true,

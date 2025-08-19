@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { createSlice } from './rootStore';
 import { reactors } from 'global';
 import { setActiveReactorId } from './app';
 
@@ -6,9 +6,8 @@ const initialState = {
   reactors: [],
 };
 
-const reactorStore = create(() => ({
-  ...initialState,
-}));
+// slice/store for reactors
+const reactorStore = createSlice('reactors');
 
 export function loadReactors() {
   reactorStore.setState({ reactors: reactors.toJSON() });

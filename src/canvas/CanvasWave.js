@@ -1,6 +1,7 @@
 import Entity from 'core/Entity';
 import { drawPath } from 'drawing/bezierSpline';
 import { resetCanvas, setColor } from 'utils/canvas';
+import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from 'view/constants';
 
 export default class CanvasWave extends Entity {
   static defaultProperties = {
@@ -9,9 +10,9 @@ export default class CanvasWave extends Entity {
     fill: false,
     fillColor: '#FFFFFF',
     taper: false,
-    width: 400,
-    height: 200,
-    midpoint: 100,
+    width: DEFAULT_CANVAS_WIDTH / 2,
+    height: DEFAULT_CANVAS_HEIGHT / 4,
+    midpoint: DEFAULT_CANVAS_HEIGHT / 8,
     lineWidth: 1.0,
   };
 

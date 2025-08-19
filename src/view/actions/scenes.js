@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { createSlice } from './rootStore';
 import { stage } from 'global';
 import { touchProject } from './project';
 
@@ -6,9 +6,7 @@ const initialState = {
   scenes: [],
 };
 
-const sceneStore = create(() => ({
-  ...initialState,
-}));
+const sceneStore = createSlice('scenes');
 
 export function loadScenes(touch = true) {
   sceneStore.setState({ scenes: stage.scenes.toJSON() });
