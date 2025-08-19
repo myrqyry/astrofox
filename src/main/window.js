@@ -13,6 +13,15 @@ import {
 const PORT = process.env.PORT || 3000;
 const log = debug('window');
 
+// Respect GPU-related environment variables so users can disable GPU/WebGL when needed.
+//
+// Environment variables:
+// - ASTROFOX_DISABLE_GPU=true or ASTROFOX_DISABLE_WEBGL=true -> disable WebGL in renderer
+// - ASTROFOX_SOFTWARE_GL=true or LIBGL_ALWAYS_SOFTWARE=1 -> force Mesa software rendering (Linux)
+// - ASTROFOX_USE_SWIFT_SHADER=true -> request SwiftShader usage (handled in main/index.js)
+const ASTROFOX_DISABLE_GPU = process.env.ASTROFOX_DISABLE_GPU === 'true' || process.env.ASTROFOX_DISABLE_WEBGL === 'true';
+const ASTROFOX_SOFTWARE_GL = process.env.ASTROFOX_SOFTWARE_GL === 'true' || process.env.LIBGL_ALWAYS_SOFTWARE === '1';
+
 let win = null;
 
 export function getWindow() {
@@ -68,9 +77,22 @@ export function createWindow() {
       backgroundThrottling: false,
       textAreasAreResizable: false,
       devTools: true,
-      webgl: true,
+      // If GPU or WebGL is explicitly disabled via env, turn WebGL off for renderer processes.
+      // This avoids attempts to create WebGL contexts on systems with broken drivers.
+      webgl: !ASTROFOX_DISABLE_GPU,
     },
   });
+
+  // Log GPU/WebGL configuration for diagnostics
+  try {
+    // app.getGPUFeatureStatus() is available in Electron; require lazily to avoid test issues
+    // eslint-disable-next-line global-require
+    const { app: electronApp } = require('electron');
+    const gpuStatus = typeof electronApp.getGPUFeatureStatus === 'function' ? electronApp.getGPUFeatureStatus() : null;
+    log('createWindow - ASTROFOX_DISABLE_GPU=%s, ASTROFOX_SOFTWARE_GL=%s, GPU feature status=%o', String(ASTROFOX_DISABLE_GPU), String(ASTROFOX_SOFTWARE_GL), gpuStatus);
+  } catch (e) {
+    log('createWindow - failed to query GPU feature status: %O', e && (e.stack || e.message || e));
+  }
 
   if (process.env.NODE_ENV === 'production') {
     const view = new BrowserView();

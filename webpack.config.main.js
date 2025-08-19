@@ -18,6 +18,9 @@ module.exports = {
     path: path.resolve(__dirname, 'app'),
     filename: '[name].js',
   },
+  externals: {
+    electron: "require('electron')"
+  },
   resolve: {
     extensions: ['.js', '.json'],
     modules: [path.resolve(__dirname, 'src'), 'node_modules'],
