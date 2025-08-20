@@ -41,17 +41,10 @@ export default class SpectrumAnalyzer extends Entity {
   }
 
   init() {
-    const { audioContext, analyzer: { fftSize } } = this;
+    // Clean up existing resources before re-initializing
+    this._disposeBuffers();
 
-    // If re-init called, release previous large arrays/buffer so GC can reclaim memory
-    try {
-      if (this.buffer) {
-        // Breaking references to allow GC
-        this.buffer = null;
-      }
-    } catch (e) {
-      // ignore
-    }
+    const { audioContext, analyzer: { fftSize } } = this;
 
     this.fft = new Uint8Array(fftSize / 2);
     this.td = new Float32Array(fftSize);
@@ -166,22 +159,10 @@ export default class SpectrumAnalyzer extends Entity {
   }
 
   /**
-   * Dispose of internal buffers and disconnect any Web Audio nodes created by this analyzer.
-   * Does NOT close the provided AudioContext (caller owns that).
+   * Disposes of internal buffers.
+   * This is called automatically by init() to clean up before re-creating resources.
    */
-  dispose() {
-    try {
-      if (this.analyzer && typeof this.analyzer.disconnect === 'function') {
-        try {
-          this.analyzer.disconnect();
-        } catch (e) {
-          // ignore
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-
+  _disposeBuffers() {
     // Clear references to large arrays/buffers so garbage collector can reclaim memory
     try {
       if (this.fft) {
@@ -197,10 +178,32 @@ export default class SpectrumAnalyzer extends Entity {
         this.blackmanTable = null;
       }
       if (this.buffer) {
+        // Breaking references to allow GC. For AudioBuffer, this is often sufficient
+        // as long as it's not connected to anything.
         this.buffer = null;
       }
     } catch (e) {
       // ignore
     }
+  }
+
+  /**
+   * Dispose of internal buffers and disconnect any Web Audio nodes created by this analyzer.
+   * Does NOT close the provided AudioContext (caller owns that).
+   */
+  destroy() {
+    try {
+      if (this.analyzer && typeof this.analyzer.disconnect === 'function') {
+        try {
+          this.analyzer.disconnect();
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    this._disposeBuffers();
   }
 }

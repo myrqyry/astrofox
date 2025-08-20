@@ -37,6 +37,11 @@ export default class Stage extends Entity {
   }
 
   init(canvas) {
+    // If we're re-initializing, destroy existing resources first to prevent leaks
+    if (this.renderer) {
+      this.destroy();
+    }
+
     const { width, height, backgroundColor } = this.properties;
 
     this.renderer = getRenderer(canvas);
